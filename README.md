@@ -13,7 +13,10 @@ This strategy refines the search in promising regions.
 
 ## Performance
 
-Current implementation does 16kh/sec per node,
+Current implementation does 16kh/sec per node (single thread), the double-core version makes ~32kh/sec:
+
+```[INFO] Connected nodes: 4, Total combinations/sec: 126046, 0.44% completed, Best distance: 2 None```
+
 feel free to speed things up if you know how ;-)
 
 
