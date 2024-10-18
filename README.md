@@ -1,5 +1,8 @@
 # HashNet Xperiment
 
+![image](https://github.com/user-attachments/assets/9413b1f2-8232-41f3-a692-752d57f4993e)
+
+
 The project is simply an experiment, where ESP32 nodes join up together solving a BTC block (hashing to find a valid nonce/extranonce2 value).
 Yeah yeah, the usual mining thing...
 
@@ -13,9 +16,14 @@ This strategy refines the search in promising regions.
 
 ## Performance
 
-Current implementation does 16kh/sec per node (single thread), the double-core version makes ~32kh/sec:
+So here's how things look with different SHA256 implementations:
 
+- Basic implementation does 16kh/sec per node (single thread)
+
+- Double-barrel implementation ~32kh/sec (dual core)
 ```[INFO] Connected nodes: 4, Total combinations/sec: 126046, 0.44% completed, Best distance: 2 None```
+
+- [NerdSHA256Plus](https://github.com/BitMaker-hub/NerdMiner_v2/tree/dev/src/ShaTests) does ~55kh/sec (dual core)
 
 feel free to speed things up if you know how ;-)
 
