@@ -1,7 +1,7 @@
+![image](https://github.com/user-attachments/assets/13fb6942-b753-4638-9d8b-3013faff74d7)
+
+
 # HashNet Xperiment
-
-![image](https://github.com/user-attachments/assets/9413b1f2-8232-41f3-a692-752d57f4993e)
-
 
 The project is simply an experiment, where ESP32 nodes join up together solving a BTC block (hashing to find a valid nonce/extranonce2 value).
 Yeah yeah, the usual mining thing...
