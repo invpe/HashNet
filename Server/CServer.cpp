@@ -13,10 +13,7 @@ CServer::CServer()
 }
 bool CServer::Start(const int16_t& ruiPort, const uint16_t& ruiMaxSessions)
 {  
-    
-    //
-    srand(time(0));
-    
+        
     SaveLog(SERVER_LOG_INFO,"Version: "SERVER_VERSION);
     SaveLog(SERVER_LOG_INFO,"Compilation: "__TIME__" "__DATE__);
     SaveLog(SERVER_LOG_INFO,"Iterations per miner: "+std::to_string(ITERATIONS_PER_MINER));
@@ -61,8 +58,6 @@ bool CServer::Start(const int16_t& ruiPort, const uint16_t& ruiMaxSessions)
 void CServer::Tick()
 {
 
-    srand(time(0));
-    
     // Check for Session Timeout
     for (itClient = m_vpSessions.begin();  itClient!=m_vpSessions.end(); )  
     {
@@ -118,7 +113,6 @@ void CServer::Tick()
             {
                 std::string response = POOL_Receive();
                 SaveLog(SERVER_LOG_INFO,"Pool received:\n"+response+"\n");
-
 
                 if (response.find("mining.notify") != std::string::npos)
                 { 

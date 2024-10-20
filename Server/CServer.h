@@ -4,7 +4,7 @@
 */
 #ifndef __CSERVER__
 #define __CSERVER__
-
+#include <chrono> // For time-based seed
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +36,8 @@
 #include <thread>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <openssl/bio.h>
+#include <openssl/bio.h> 
+
 #include "CSystemUtil.h"
 #include "json11.hpp"
 #include "CSerializer.h"
@@ -46,7 +47,7 @@
 #define SERVER_LOG_INFO         0               // Info log level
 #define SERVER_LOG_WARRNING     1               // Warrning log level
 #define SERVER_LOG_ERROR        2               // Error log level
-#define SERVER_VERSION          "1.2"           // Server version
+#define SERVER_VERSION          "1.3"           // Server version
 #define SERVER_MINOR_VERSION    __DATE__" "__TIME__ 
 #define SERVER_PORT             5000
 #define SESSION_TIMEOUT         15              // Ping timeout
@@ -78,7 +79,10 @@ public:
 
     struct tCurrentJob
     { 
+        tCurrentJob(): m_RandomEngine(std::random_device{}())
+        {
 
+        }
         void Clear()
         {
             m_mMapping.clear();
@@ -109,19 +113,14 @@ public:
         std::string GenerateRandomExtranonce2()
         {
             int size = std::stoi(m_mMapping["extranonce2_size"]);
-
-            // Initialize random number generator
-            static std::random_device rd;
-            static std::mt19937 gen(rd());  // Use Mersenne Twister engine
-
+  
             // Define the characters we want to use (0-9 and a-f)
             const char hex_chars[] = "0123456789abcdef";
 
-            
             std::stringstream ss;            
             std::uniform_int_distribution<> dist(0, 15); // Generates a random number between 0 and 15
             for (int i = 0; i < size * 2; ++i) {  // size * 2 because each byte is 2 hex characters
-                ss << hex_chars[dist(gen)];        // Pick a random character from hex_chars
+                ss << hex_chars[dist(m_RandomEngine)];        // Pick a random character from hex_chars
             }
 
             return ss.str();  
@@ -130,9 +129,10 @@ public:
         // Return next chunk of nonces for a given extranonce2
         std::pair<uint32_t, uint32_t> GetNextWorkChunk(const std::string& extranonce2)
         {
+            
             uint32_t startNonce = 0;
             uint32_t endNonce = 0;
-
+  
             // Check if we have a last endnonce for the given extranonce2
             if (m_mExtranonce2LastEndNonce.find(extranonce2) != m_mExtranonce2LastEndNonce.end()) {
                 startNonce = m_mExtranonce2LastEndNonce[extranonce2]; // Use the last endnonce as the new startNonce
@@ -143,9 +143,24 @@ public:
 
             // Store the updated endNonce for this extranonce2
             // Set the next startNonce to be endNonce + 1
-            m_mExtranonce2LastEndNonce[extranonce2] = endNonce + 1; 
+            m_mExtranonce2LastEndNonce[extranonce2] = endNonce + 1;  
+
 
             return {startNonce, endNonce};   
+
+/*          ABSOLUTE RANDOMNESS - NO LOGIC AT ALL -CHECK AFTER TESTING WITH THE BEST EN2
+            uint32_t max_nonce_start = UINT32_MAX - ITERATIONS_PER_MINER + 1;
+
+            // Create the distribution with the given range
+            std::uniform_int_distribution<uint32_t> dist(0, max_nonce_start);
+
+            // Use the member variable m_RandomEngine to generate the random number
+            uint32_t uiStartChunk = dist(m_RandomEngine);
+            uint32_t uiEndChunk = uiStartChunk + ITERATIONS_PER_MINER - 1;
+
+            return {uiStartChunk, uiEndChunk};*/
+
+
         }
 
         // Core logic, roll the dice to either use random extranonce2 or choose
@@ -153,7 +168,8 @@ public:
         std::string GetNextExtranonce2()
         {
             std::string strExtranonce2 = GenerateRandomExtranonce2();
-
+ 
+            
             // 60% chance to pick from the best extranonce2 if available
             if (rand() % 100 < 60 && !m_mBestExtranonce2.empty()) {
  
@@ -162,12 +178,12 @@ public:
                     bestExtranonce2List.push_back(entry.first);
                 }
 
-                // Generate a random index and select a random extranonce2
-                std::random_device rd;
-                std::mt19937 gen(rd());
+                // Generate a random index and select a random extranonce2 
                 std::uniform_int_distribution<> dist(0, bestExtranonce2List.size() - 1);
-                strExtranonce2 = bestExtranonce2List[dist(gen)];
+                strExtranonce2 = bestExtranonce2List[dist(m_RandomEngine)];
             }
+            
+
 
             return strExtranonce2;
         }
@@ -176,6 +192,8 @@ public:
         std::vector<std::string> m_vMerkleBranch; 
         std::map<std::string,int> m_mBestExtranonce2;  
         std::map<std::string, uint32_t> m_mExtranonce2LastEndNonce;   
+
+        std::mt19937 m_RandomEngine; 
   
     };
 
@@ -209,7 +227,8 @@ private:
     uint32_t m_uiStatsEpoch;
     uint32_t m_uiStartTime;       
     int32_t m_Socket;   
-    int32_t m_PoolSocket;
+    int32_t m_PoolSocket; 
+
 
     bool m_bActive;  
 
@@ -221,11 +240,8 @@ private:
     
 
     CServer::tStatistics m_tStatistics;
-    CServer::tCurrentJob m_tCurrentJob;
- 
-    SSL_CTX* ctx;
-    SSL* ssl;
-    int client_socket = -1;
+    CServer::tCurrentJob m_tCurrentJob;  
+
 };
 #endif
  
