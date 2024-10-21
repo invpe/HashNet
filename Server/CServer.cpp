@@ -506,7 +506,13 @@ void CServer::Tick()
 
                 strJSON += "{\n";
                 strJSON += "\"ident\": \""+pClient->GetIdent()+"\",\n";
-                strJSON += "\"address\": \""+pClient->GetIP()+"\",\n";
+                 
+                CSHA1 m_SHA1;  
+                m_SHA1.update(pClient->GetIP());    
+
+                strJSON += "\"address\": \""+m_SHA1.final()+"\",\n";
+
+                
                 strJSON += "\"combinations_per_sec\": "+std::to_string(pClient->GetCombinationsPerSecond())+",\n";
                 strJSON += "\"jobid\": \""+pClient->GetJobID()+"\",\n";
                 strJSON += "\"start_nonce\": "+std::to_string(pClient->GetStartNonce())+",\n";
