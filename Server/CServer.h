@@ -33,11 +33,9 @@
 #include <algorithm>
 #include <map>
 #include <set>
-#include <thread>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h> 
+#include <thread> 
 
+#include "sha1.hpp"
 #include "CSystemUtil.h"
 #include "json11.hpp"
 #include "CSerializer.h"
@@ -47,7 +45,7 @@
 #define SERVER_LOG_INFO         0               // Info log level
 #define SERVER_LOG_WARRNING     1               // Warrning log level
 #define SERVER_LOG_ERROR        2               // Error log level
-#define SERVER_VERSION          "1.3"           // Server version
+#define SERVER_VERSION          "1.2"           // Server version
 #define SERVER_MINOR_VERSION    __DATE__" "__TIME__ 
 #define SERVER_PORT             5000
 #define SESSION_TIMEOUT         15              // Ping timeout
