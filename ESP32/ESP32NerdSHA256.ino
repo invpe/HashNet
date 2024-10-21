@@ -15,6 +15,8 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <Preferences.h>
+
+#include <Adafruit_NeoPixel.h>
 #include "SPIFFS.h"
 #include "mbedtls/md.h"
 #include "mbedtls/sha256.h"
@@ -53,7 +55,7 @@ const String strVersion = "1.2";
 String strWIFI_SSID = "";
 String strWIFI_Password = "";
 String strHASHNET_SERVER = "";
-String strMACAddress = "";
+String strMINER_IDENT = "";
 String strBestDistanceBlockHash = "";
 static const uint32_t EXPONENT_SHIFT = 24;
 static const uint32_t MANTISSA_MASK = 0xffffff;
@@ -71,6 +73,8 @@ int iLastZeroBitsDistance = 0;
 nerdSHA256_context midstate0;
 nerdSHA256_context midstate1;
 
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, 27, NEO_GRB + NEO_KHZ800);
+
 bool StreamFile(const String &rstrURL, const String &rstrPath) {
   HTTPClient WebClient;
   WebClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -81,8 +85,7 @@ bool StreamFile(const String &rstrURL, const String &rstrPath) {
   bool bSuccess = false;
   if (httpCode == HTTP_CODE_OK) {
     File file = SPIFFS.open(rstrPath, "w");
-    if (!file) {
-    } else {
+    if (file) {
       WiFiClient *stream = WebClient.getStreamPtr();
       uint8_t buffer[1024] = { 0 };
       int bytesRead = 0;
@@ -97,6 +100,7 @@ bool StreamFile(const String &rstrURL, const String &rstrPath) {
   return bSuccess;
 }
 bool OTA() {
+  Serial.println("OTA Start");
   if (StreamFile(VERSION_URL, "/update") == true) {
     Serial.println("OTA File downloaded");
     File firmwareFile = SPIFFS.open("/update", "r");
@@ -110,8 +114,8 @@ bool OTA() {
       if (Update.end()) {
         return true;
       }
-    }
-  }
+    } else Serial.println("OTA Cant open file");
+  } else Serial.println("OTA Cant stream");
   return false;
 }
 void SaveConfig() {
@@ -119,6 +123,7 @@ void SaveConfig() {
   preferences.putString("ssid", strWIFI_SSID);
   preferences.putString("pass", strWIFI_Password);
   preferences.putString("server", strHASHNET_SERVER);
+  preferences.putString("ident", strMINER_IDENT);
   preferences.end();
 }
 void LoadConfig() {
@@ -126,6 +131,7 @@ void LoadConfig() {
   strWIFI_SSID = preferences.getString("ssid", "");
   strWIFI_Password = preferences.getString("pass", "");
   strHASHNET_SERVER = preferences.getString("server", "");
+  strMINER_IDENT = preferences.getString("ident", "");
   preferences.end();
 }
 bool checkValid(unsigned char *hash, unsigned char *target) {
@@ -380,6 +386,11 @@ void taskSearchCore1(void *pParam) {
 }
 
 void setup() {
+  pixels.begin();
+  pixels.setBrightness(255);
+  pixels.setPixelColor(0, 255, 255, 0);
+  pixels.show();
+
   Serial.begin(115200);
 
   disableCore0WDT();
@@ -390,6 +401,19 @@ void setup() {
     Serial.println("Failed to mount file system");
     delay(1000);
   }
+
+  // Clean up
+  SPIFFS.remove("/update");
+
+  size_t totalBytes = 0;
+  totalBytes = SPIFFS.totalBytes();
+  Serial.println("TOTAL: " + String(totalBytes));
+
+  size_t usedBytes = 0;
+  usedBytes = SPIFFS.usedBytes();
+  Serial.println("USED: " + String(usedBytes));
+
+
 
   // Load config
   LoadConfig();
@@ -426,7 +450,18 @@ void setup() {
     }
     strHASHNET_SERVER = Serial.readString();
     strHASHNET_SERVER.trim();  // Remove leading/trailing spaces
+
+    //
+    Serial.println("Please enter MINER NAME:");
+    while (!Serial.available()) {
+      // Wait for input
+    }
+    strMINER_IDENT = Serial.readString();
+    strMINER_IDENT.trim();  // Remove leading/trailing spaces
   }
+
+  // Avoid empty names
+  if (strMINER_IDENT.isEmpty()) strMINER_IDENT = "ESP32_NONAME";
 
   // Save config
   SaveConfig();
@@ -434,20 +469,28 @@ void setup() {
   //
   WiFi.setHostname("HASHNET_NODE");
 
+
+
+
   // Wifi up
   WiFi.begin(strWIFI_SSID, strWIFI_Password);
   while (WiFi.status() != WL_CONNECTED) {
+    pixels.setPixelColor(0, 255, 0, 0);
+    pixels.show();
     Serial.println(".");
     delay(500);
   }
 
   // Ensure connection to HASHNET
   while (!client.connect(strHASHNET_SERVER.c_str(), SERVER_PORT)) {
+    pixels.setPixelColor(0, 255, 0, 255);
+    pixels.show();
     Serial.println("!");
     delay(5000);
   }
-  // Get the node identification from MAC address
-  strMACAddress = WiFi.macAddress();
+
+  pixels.setPixelColor(0, 0, 0, 0);
+  pixels.show();
 }
 
 void loop() {
@@ -584,14 +627,20 @@ void loop() {
 
         // Stats
         if (millis() - uiTick >= CHECK_INTERVAL) {
+
           if (!client.connected()) {
             ESP.restart();
           }
+          pixels.setPixelColor(0, 0, 255, 0);
+          pixels.show();
 
           uint32_t uiTotalCS = (uiTask0CS + uiTask1CS) / (CHECK_INTERVAL / 1000);
-          String strPayload = String("{\"method\": \"stats\", \"combinations_per_sec\": ") + uiTotalCS + ", \"distance\": " + String(iLastZeroBitsDistance) + ", \"ident\":\"" + strMACAddress + "\",\"version\":\"" + strVersion + "\",\"besthash\":\"" + strBestDistanceBlockHash + "\"}";
+          String strPayload = String("{\"method\": \"stats\", \"combinations_per_sec\": ") + uiTotalCS + ", \"distance\": " + String(iLastZeroBitsDistance) + ", \"ident\":\"" + strMINER_IDENT + "\",\"version\":\"" + strVersion + "\",\"besthash\":\"" + strBestDistanceBlockHash + "\"}";
           client.println(strPayload);
           Serial.println(strPayload);
+
+          pixels.setPixelColor(0, 0, 0, 0);
+          pixels.show();
 
           uiTask0CS = 0;
           uiTask1CS = 0;
