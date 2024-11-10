@@ -24,3 +24,6 @@ Top distance reported: `Epoch: 11/9/2024, 9:53:45 PM | Distance: 8` 🤬
 
 ![image](https://github.com/user-attachments/assets/843f0a21-4fb6-4be0-8443-e09d9de35adc)
 
+![image](https://github.com/user-attachments/assets/48bda940-7d7b-4cfd-babf-fe79cd1649e0)
+
+![image](https://github.com/user-attachments/assets/acba2ac9-83b5-45de-bbe8-c22395933adc)
