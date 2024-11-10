@@ -12,5 +12,15 @@ Oh, and the miners? They’re not running souped-up rigs—nope. It’s an energ
 
 So, it’s not just an experiment; it’s a stats-meets-strategy battle royale.  
 
+# Fancy results so far
+
+`00000000000000000002c4e40000000000000000000000000000000000000000` - the current target (9 zeroes)
+
+Top distance reported: `Epoch: 11/9/2024, 9:53:45 PM | Distance: 8` 🤬
+
+
+# Few sshots
+
+
 ![image](https://github.com/user-attachments/assets/843f0a21-4fb6-4be0-8443-e09d9de35adc)
 
