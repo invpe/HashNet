@@ -22,8 +22,11 @@ Top distance reported: `Epoch: 11/9/2024, 9:53:45 PM | Distance: 8` 🤬
 
 # Few sshots
 
+A few shots worth more than a thousands of words ;-)
 
 ![image](https://github.com/user-attachments/assets/843f0a21-4fb6-4be0-8443-e09d9de35adc)
+
+![image](https://github.com/user-attachments/assets/77f8643c-5855-4bdb-8755-6031eea7ce20)
 
 ![image](https://github.com/user-attachments/assets/48bda940-7d7b-4cfd-babf-fe79cd1649e0)
 
