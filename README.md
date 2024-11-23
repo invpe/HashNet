@@ -1,9 +1,8 @@
-<img width="929" alt="image" src="https://github.com/user-attachments/assets/6e6dcee6-927d-4f29-a99e-5fc1b0faa4ff">
-
+![image](https://github.com/user-attachments/assets/f0e342ad-a39e-4dc9-b08b-f358db93b864)
 
 # HashNet
 
-Welcome to the world of blockchain meets chaos science! Here’s the scoop:
+Welcome to the world of blockchains meets chaos science! Here’s the scoop:
 
 We’ve got a server playing matchmaker, splitting mining tasks from a solo mining pool into juicy “chunks” for miners. But here’s the twist—it’s not just mining; it’s a fitness contest. The server randomizes a thing called extranonce2, a funky little number miners fight over like treasure hunters sniffing for gold. Each miner tries to find the best “score”—a magical combo of zeroes in the block hash, getting them closer to the target value, calculated from nbits like some cryptographic carnival game.
 
