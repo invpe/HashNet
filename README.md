@@ -12,6 +12,18 @@ Oh, and the miners? They’re not running souped-up rigs—nope. It’s an energ
 
 So, it’s not just an experiment; it’s a stats-meets-strategy battle royale.  
 
+# Summary
+
+Hashnet is a cryptocurrency lottery aggregator that combines efforts across multiple pools to increase the chances of striking gold. 
+We leverage machine learning to optimize performance and improve the odds.
+
+Unlike traditional mining setups, Hashnet focuses on day-use devices—not high-powered rigs—making it simple, affordable, and accessible for everyone.
+
+- Got surplus energy? Turn it into potential earnings.
+- Driving a car ? Plug in your phone.
+- No more WFH? Plug your phone at office, contribute for free.
+- Worth trying? Simply join.
+
 # Stats
 
 See the HashNet performance by opening the [dashboard](https://hashnet.amstaff.uk/f2d312928410f600aa7afaaf5d76ae60b2bd2504592bde42e127ab1d7d278301/)
