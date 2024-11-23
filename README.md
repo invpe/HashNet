@@ -12,11 +12,10 @@ Oh, and the miners? They’re not running souped-up rigs—nope. It’s an energ
 
 So, it’s not just an experiment; it’s a stats-meets-strategy battle royale.  
 
-# Fancy results so far
+# Stats
 
-`00000000000000000002c4e40000000000000000000000000000000000000000` - the current target (9 zeroes)
+See the HashNet performance by opening the [dashboard](https://hashnet.amstaff.uk/f2d312928410f600aa7afaaf5d76ae60b2bd2504592bde42e127ab1d7d278301/)
 
-Top distance reported: `Epoch: 11/9/2024, 9:53:45 PM | Distance: 8` 🤬
 
 
 # Few sshots
