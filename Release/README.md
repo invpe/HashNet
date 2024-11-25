@@ -7,13 +7,15 @@ This release supports jobs with `DSHA256`, `SHA1` stay up to date with new ones 
 
 ## Windows
 
-Download the `hashnet.exe` file and run with `hashnet.exe server.tessie.club your_miner_id`.
-Example: `hashnet.exe server.tessie.club MY_RIG1`
+Download the `hashnet.exe` file and run with `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
+
+Example: `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM MY_RIG1`
 
 ## Linux
 
-Download the `hashnet.bin` file and run with `./hashnet.bin server.tessie.club your_miner_id`.
-Example: `while true; do ./hashnet.bin server.tessie.club MY_RIG1;done`
+Download the `hashnet.bin` file and run with `./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
+
+Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 ## ESP32
 
@@ -26,7 +28,8 @@ Example: `while true; do ./hashnet.bin server.tessie.club MY_RIG1;done`
 
 You have to be invited to the TestFlight in order to join with your phone or tablet, let us know you are interested.
 
----
+# 👷 Advanced
+
 ### How to run 'hashnet.bin' in the background as a systemd service for Linux:
 
 **Enter sudo mode**: `sudo su`
