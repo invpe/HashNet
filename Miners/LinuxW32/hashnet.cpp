@@ -352,7 +352,7 @@ int main(int argc, char*argv[]) {
               std::string merkle_root = calculate_merkle_root_to_hex(final_hash, 32, merkle_branch);
 
               // BLOCK CONSTRUCTION (dummy nonce 000000 at the end)
-              std::string blockheader = version + prevhash + merkle_root + nbits + ntime + "00000000";
+             std::string blockheader = version + prevhash + merkle_root +ntime+ nbits + "00000000";
               str_len = blockheader.length() / 2;
               uint8_t bytearray_blockheader[str_len];
               to_byte_array(blockheader.c_str(), str_len * 2, bytearray_blockheader);
@@ -412,11 +412,11 @@ int main(int argc, char*argv[]) {
                         // Only compare if we're progressing towards the target
                         if (checkValid(block_hash, target)) 
                         {
-                            
+                           std::string strNonceHex = (std::ostringstream() << std::setw(8) << std::setfill('0') << std::hex << uiNonce).str(); 
                            std::string strTemp = std::string("{\"method\": \"found\", \"job_id\": \"") + job_id
                                   + std::string("\", \"extranonce1\": \"") + extranonce1
                                   + std::string("\", \"extranonce2\": \"") + extranonce2
-                                  + std::string("\", \"nonce\": \"") + std::to_string(uiNonce)
+                                  + std::string("\", \"nonce\": \"") + strNonceHex
                                   + std::string("\", \"ntime\": \"") + ntime + "\"}";
 
 
