@@ -95,6 +95,12 @@ inline void sha256_double_with_intermediate_state(mbedtls_sha256_context *ctx, u
   // Clean up
   mbedtls_sha256_free(&temp_ctx);
 }
+std::string hexStringFromUInt32(uint32_t value) {
+    char buffer[9];  // 8 characters + null terminator
+    snprintf(buffer, sizeof(buffer), "%08x", value);  // Convert to zero-padded hex
+    return std::string(buffer);
+}
+
 bool StreamFile(const String &rstrURL, const String &rstrPath) {
   HTTPClient WebClient;
   WebClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -254,7 +260,12 @@ uint8_t hex(char ch) {
   uint8_t r = (ch > 57) ? (ch - 55) : (ch - 48);
   return r & 0x0F;
 }
-int to_byte_array(const char *in, size_t in_size, uint8_t *out) {
+int to_byte_array(const char *in, size_t in_size, uint8_t *out) {std::string hexStringFromUInt32(uint32_t value) {
+    char buffer[9];  // 8 characters + null terminator
+    snprintf(buffer, sizeof(buffer), "%08x", value);  // Convert to zero-padded hex
+    return std::string(buffer);
+}
+
   int count = 0;
   if (in_size % 2) {
     while (*in && out) {
@@ -452,7 +463,7 @@ void MiningTask(void *pParam) {
         std::string strTemp = std::string("{\"method\": \"found\", \"job_id\": \"") + job_id
                               + std::string("\", \"extranonce1\": \"") + extranonce1
                               + std::string("\", \"extranonce2\": \"") + extranonce2
-                              + std::string("\", \"nonce\": \"") + std::to_string(uiNonce)
+                              + std::string("\", \"nonce\": \"") + hexStringFromUInt32(uiNonce)
                               + std::string("\", \"ntime\": \"") + ntime + "\"}";
 
         String strOutputPayload = String(strTemp.c_str());
