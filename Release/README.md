@@ -72,10 +72,3 @@ WantedBy=multi-user.target
 **Check Status**: Verify the service status using `systemctl status hashnet.service`
 
 Logs can be monitored via `journalctl -u hashnet.service -n 20` where after -n you can specify the number of lines which will be prompted.
-**Save the file (Ctrl+O), exit the editor (Ctrl+X)
-**Reload Systemd**: Run `systemctl daemon-reload` to reload systemd manager configuration.
-**Enable the Service**: Use `systemctl enable hashnet.service` to enable the service to start at boot.
-**Start the Service**: Start the service with `systemctl start hashnet.service`
-**Check Status**: Verify the service status using `systemctl status hashnet.service`
-
-Logs can be monitored via `journalctl -u hashnet.service -n 20` where after -n you can specify the number of lines which will be prompted.``
