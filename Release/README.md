@@ -54,7 +54,7 @@ Description=Hashnet
 User=root   
 WorkingDirectory=/root/hashnet  
 ExecStart=/root/hashnet/hashnet.sh  
-Type=simple 
+Type=simple   
 Restart=always  
 RestartSec=60s
 
