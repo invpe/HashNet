@@ -2,8 +2,6 @@
 
 <div align="center">
 <a href=https://github.com/invpe/HashNet/releases/tag/1.2><img src="https://badgen.net/static/>/Releases/34ebd5?scale=2?"></a><BR>
-<a href=https://discord.gg/SDfscecA><img src="https://badgen.net/static/>/Discord/6666ff?scale=2?"></a> 
-<a href=https://github.com/invpe/HashNet/discussions><img src="https://badgen.net/static/>/Discussions/8e44ad?scale=2?"></a>   
 <a href=https://github.com/invpe/HashNet/issues><img src="https://badgen.net/static/>/Issues/8e44ad?scale=2?"></a>   
 <a href=https://hashnet.amstaff.uk/f2d312928410f600aa7afaaf5d76ae60b2bd2504592bde42e127ab1d7d278301/><img src="https://badgen.net/static/>/Explorer/3498db?scale=2?"></a>
   <BR>
