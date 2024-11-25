@@ -20,27 +20,3 @@ What happens next? The server tracks the top-performing extranonce2 values like 
 Oh, and the miners? They’re not running souped-up rigs—nope. It’s an energy-saving showdown! Picture ESP32 microcontrollers and iPhones grinding hashes like tiny crypto superheroes, proving you don’t need a power-hungry beast to have some blockchain fun.
 
 So, it’s not just an experiment; it’s a stats-meets-strategy battle royale.  
-
-# Summary
-
-Hashnet is a cryptocurrency lottery aggregator that combines efforts across multiple pools to increase the chances of striking gold. 
-We leverage machine learning to optimize performance and improve the odds.
-
-Unlike traditional mining setups, Hashnet focuses on day-use devices—not high-powered rigs—making it simple, affordable, and accessible for everyone.
-
-- Got surplus energy? Turn it into potential earnings.
-- Driving a car ? Plug in your phone.
-- No more WFH? Plug your phone at office, contribute for free.
-- Worth trying? Simply join.
- 
-# Few sshots
-
-A few shots worth more than a thousands of words ;-)
-
-![image](https://github.com/user-attachments/assets/843f0a21-4fb6-4be0-8443-e09d9de35adc)
-
-![image](https://github.com/user-attachments/assets/77f8643c-5855-4bdb-8755-6031eea7ce20)
-
-![image](https://github.com/user-attachments/assets/48bda940-7d7b-4cfd-babf-fe79cd1649e0)
-
-![image](https://github.com/user-attachments/assets/acba2ac9-83b5-45de-bbe8-c22395933adc)
