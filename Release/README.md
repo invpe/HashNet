@@ -15,7 +15,7 @@ Example: `hashnet.exe server.tessie.club MY_RIG1`
 Download the `hashnet.bin` file and run with `./hashnet.bin server.tessie.club your_miner_id`.
 Example: `while true; do ./hashnet.bin server.tessie.club MY_RIG1;done`
 
--- How to run 'hashnet.bin' in the background as a systemd service:
+++ How to run 'hashnet.bin' in the background as a systemd service:
 **Enter sudo mode: `sudo su`
 **Download the latest release (in this case it is 1.3, if a newer one is released, simply edit the part after /download/*.*/): `wget -P /root/hashnet https://github.com/invpe/HashNet/releases/download/1.3/hashnet.bin`
 then run: `chmod +x /root/hashnet/hashnet.bin`
