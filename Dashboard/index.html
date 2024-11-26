@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
     <style> 
         .blinking {
             animation: blinkingEffect 1.5s infinite;
@@ -118,6 +119,11 @@
         <!-- Mining Overview -->
         <div id="mining-section" class="section"></div>
 
+        <!-- Chart Section -->
+        <div id="chart-section" class="section">
+            <canvas id="historyChart" width="400" height="200"></canvas>
+        </div>
+
         <!-- Pool Details -->
         <div id="pools-section" class="section"></div>
 
@@ -136,6 +142,7 @@
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 renderData(data);
+                if (data.History) renderChart(data.History);
             } catch (error) {
                 console.error("Error loading data:", error);
                 document.body.innerHTML += '<p style="color: red;">Failed to load data. Check console for details.</p>';
@@ -147,6 +154,60 @@
             content.classList.toggle('open');
             const icon = event.currentTarget.querySelector('span');
             icon.style.transform = content.classList.contains('open') ? 'rotate(90deg)' : 'rotate(0)';
+        }
+        
+        function renderChart(history) {
+            const labels = history.map(entry =>
+                new Date(entry.Epoch * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            );
+            const cpsData = history.map(entry => entry.CPS);
+
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'CPS',
+                        data: cpsData,
+                        borderColor: 'black',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'black',
+                    },{
+                        label: 'Miners',
+                        data: cpsData,
+                        borderColor: 'black',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        pointRadius: 2,
+                        pointBackgroundColor: 'black',
+                    }
+
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: { color: 'black' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        },
+                        y: {
+                            ticks: { color: 'black' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'black' },
+                        },
+                    },
+                },
+            });
         }
         function renderData(data) {
             // Clear sections
@@ -177,14 +238,14 @@
                 const job = pool.Job[0];
                 const isReady = job.Ready === 1;
                 const hasHistory = pool.History.length > 0; // Check if history exists
+                const validCount = pool.History.filter(entry => entry.Valid === "Valid").length; // Count valid entries
                 const hasFound = job.Found > 0;
-                const cardClass = 'card-ready';//isReady ? 'card-ready' : 'card-not-ready';
-                const blinkingClass = hasHistory ? 'blinking' : ''; // Blink green if history exists
-                const emoticon = hasHistory ? '🟢' : ''; // Show icon if history exists
-                const online = pool.Online ? "Online" : "Offline";
+                const cardClass = isReady ? 'card-ready' : 'card-not-ready';
+                const blinkingClass = ''; //hasHistory ? 'blinking' : ''; // Blink green if history exists
+                const emoticon = hasHistory ? '😋' : '😡'; // Show icon if history exists
 
                 // Pool history with converted Epoch
-                const historyHTML = pool.History  // Take the last 10 entries
+                const historyHTML = pool.History.slice(-10) // Take the last 10 entries
                     .map(entry => {
                         const dateTime = new Date(entry.Epoch * 1000).toLocaleString(); // Convert Unix timestamp
                         return `<p><strong>Date:</strong> ${dateTime} | <strong>Ident:</strong> ${entry.Ident} | Valid: ${entry.Valid}</p>`;
@@ -192,9 +253,9 @@
                     .join('');
 
                 return `
-                    <div class="card ${cardClass}">
+                    <div class="card ${cardClass} ${blinkingClass}">
                         <div class="card-header" onclick="toggleContent(event)">
-                            <h2>${pool.Name} ${online} ${emoticon}</h2>
+                            <h2>${emoticon} ${pool.Name} - Found: ${validCount}</h2>
                             <span>▶</span>
                         </div>
                         <div class="card-content">
@@ -204,15 +265,15 @@
                             <p><strong>Completed:</strong> ${job.Completed}</p>
                             <p><strong>Best Score (Job):</strong> ${job.BestScoreJob}</p>
                             <p><strong>Best Score (Ever):</strong> ${job.BestScoreEver}</p>
-                            <h3>History (Last 20 Mined Blocks):</h3>
+                            <h3>History (Last 10 Mined Blocks):</h3>
                             ${historyHTML || '<p>No history available.</p>'}
                         </div>
                     </div>`;
             }).join('');
             document.getElementById("pools-section").innerHTML = `<h2>Pools</h2>${poolsHTML}`;
 
-            // Nodes Details
-            // Aggregate nodes by `Ident` and count occurrences
+            /// Nodes Details
+            const medals = ['🥇', '🥈', '🥉']; // Gold, Silver, Bronze medals
             const aggregatedNodes = data.Nodes.reduce((acc, node) => {
                 if (!acc[node.Ident]) {
                     acc[node.Ident] = {
@@ -231,16 +292,18 @@
                 return acc;
             }, {});
 
-            const sortedNodes = Object.values(aggregatedNodes).sort((a, b) => b.CPS - a.CPS); // Sort aggregated nodes by CPS descending
-            const nodesHTML = sortedNodes.map(node => {
+            const sortedNodes = Object.values(aggregatedNodes)
+                .sort((a, b) => b.CPS - a.CPS); // Sort aggregated nodes by CPS descending
+
+            const nodesHTML = sortedNodes.map((node, index) => {
+                const medal = medals[index] || '💪'; // Assign medal for top 3, else empty
                 return `
                     <div class="card">
                         <div class="card-header" onclick="toggleContent(event)">
-                            <h2>Node: ${node.Ident} (x${node.Count})</h2>
+                            <h2>${medal} ${node.Ident} (x${node.Count})</h2>
                             <span>▶</span>
                         </div>
-                        <div class="card-content">
-                            <p><strong>Address:</strong> ${node.Address}</p>
+                        <div class="card-content">                            
                             <p><strong>CPS:</strong> ${node.CPS.toLocaleString()}</p>
                             <p><strong>Difficulty:</strong> ${node.Difficulty}</p>
                             <p><strong>Completed:</strong> ${node.Completed}</p>
@@ -248,6 +311,8 @@
                     </div>`;
             }).join('');
             document.getElementById("nodes-section").innerHTML = `<h2>Nodes</h2>${nodesHTML}`;
+
+
         }
 
 
