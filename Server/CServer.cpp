@@ -854,7 +854,8 @@ bool CServer::IsThrottled(const std::string& rstrIP)
 }
 void CServer::ThrottleIP(const std::string& rstrIP)
 {
-    if(rstrIP != "194.150.102.198")
+    // Local tests dont get throttled
+    if(rstrIP != "127.0.0.1")
         m_mThrottleIP[rstrIP] = time(0);    
 
     SaveLog(SERVER_LOG_WARRNING,"Throttling enabled for "+rstrIP);
