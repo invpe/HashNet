@@ -3,6 +3,8 @@
 Multiplatform release for W32, Linux, ESP32 - the iOS comes with an invite from the AppStore Test Flight.
 This release supports jobs with `DSHA256`, `SHA1` stay up to date with new ones coming.
 
+Since this is in POC, It is recommended to run the binaries in the loop, in case the mining exits due to software issues, loop will restart it again.
+
 # Instructions
 
 ## Windows
@@ -32,15 +34,18 @@ You have to be invited to the TestFlight in order to join with your phone or tab
 
 ### Autorun hashnet's newest version with crontab (Linux, Raspberry)
 
-Execute `crontab -e`
+This example is based on raspberry pi, but you can update to any linux debian like dist.
 
-Add `@reboot /home/pi/start.sh` at the end.
 
-Exit crontab editing
+1. Execute `crontab -e`
 
-Execute `cd /home/pi`
+2. Add `@reboot /home/pi/start.sh` at the end.
 
-Create a startup script: `nano start.sh`, and copy the below - dont forget to update `HASHNET_SERVER`, `YOURNODEID`.
+3. Exit crontab editing
+
+4. Execute `cd /home/pi`
+
+5. Create a startup script: `nano start.sh`, and copy the below - dont forget to update `HASHNET_SERVER`, `YOURNODEID`.
 
 ```
 #!/bin/bash
@@ -67,12 +72,13 @@ done
 
 ```
 
-Make the script executable with `chmod +x ./start.sh`
+6. Make the script executable with `chmod +x ./start.sh`
+
+7. Simply `reboot` to test.
 
 From now on, your raspberry/linux will download the latest binary from the releases and run it.
 
-Simply `reboot` to test.
-
+------ 
 
 ### How to run 'hashnet.bin' in the background as a systemd service for Linux:
 
