@@ -11,7 +11,7 @@ Download the `hashnet.exe` file and run with `hashnet.exe YOUR_HASHNET_SERVER_DO
 
 Example: `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM MY_RIG1`
 
-## Linux
+## Linux, Raspberry PI
 
 Download the `hashnet.bin` file and run with `./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
 
@@ -29,6 +29,50 @@ Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 You have to be invited to the TestFlight in order to join with your phone or tablet, let us know you are interested.
 
 # 👷 Advanced
+
+### Autorun hashnet's newest version with crontab (Linux, Raspberry)
+
+Execute `crontab -e`
+
+Add `@reboot /home/pi/start.sh` at the end.
+
+Exit crontab editing
+
+Execute `cd /home/pi`
+
+Create a startup script: `nano start.sh`, and copy the below - dont forget to update `HASHNET_SERVER`, `YOURNODEID`.
+
+```
+#!/bin/bash
+
+# Wait for the network to be up
+sleep 60
+
+# Remove the old binary
+rm -f /home/pi/hashnet_arm64.bin
+
+# Download the latest binary
+wget https://github.com/invpe/HashNet/releases/latest/download/hashnet_arm64.bin -O /home/pi/hashnet_arm64.bin
+
+# Make the binary executable
+chmod +x /home/pi/hashnet_arm64.bin
+
+# Get the number of CPU cores
+CORES=$(nproc)
+
+# Start one instance per core in separate screen sessions
+for ((i=0; i<CORES; i++)); do
+    screen -dmS hashnet_runner_$i bash -c "while true; do ./hashnet_arm64.bin HASHNET_SERVER YOURNODEID; done"
+done
+
+```
+
+Make the script executable with `chmod +x ./start.sh`
+
+From now on, your raspberry/linux will download the latest binary from the releases and run it.
+
+Simply `reboot` to test.
+
 
 ### How to run 'hashnet.bin' in the background as a systemd service for Linux:
 
