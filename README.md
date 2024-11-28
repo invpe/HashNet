@@ -20,3 +20,18 @@ What happens next? The server tracks the top-performing extranonce2 values like 
 Oh, and the miners? They’re not running souped-up rigs—nope. It’s an energy-saving showdown! Picture ESP32 microcontrollers and iPhones grinding hashes like tiny crypto superheroes, proving you don’t need a power-hungry beast to have some blockchain fun.
 
 So, it’s not just an experiment; it’s a stats-meets-strategy battle royale.  
+
+
+# Benchmarks
+
+
+| Device        | Job           | Hashrate     |
+| ------------- | ------------- | -------------
+| ESP32  | DSHA256  | ~45kH/sec/two cores |
+| Raspberry PI 4  | DSHA256  | ~700kH/sec/core |
+| iPad Pro | DSHA256 | ~6MH/sec |
+| iPhone 8 | DSHA256 | ~2.8MH/sec |
+| iPhone 11 Pro | DSHA256 | ~3.0MH/sec |
+| iPhone 13 Pro | DSHA256 | ~3.1MH/sec |
+
+
