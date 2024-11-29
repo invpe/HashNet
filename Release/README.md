@@ -125,3 +125,21 @@ WantedBy=multi-user.target
 **Check Status**: Verify the service status using `systemctl status hashnet.service`
 
 Logs can be monitored via `journalctl -u hashnet.service -n 20` where after -n you can specify the number of lines which will be prompted.
+
+------    
+
+### Run hashnet.exe in terminal with auto-restart function [Windows]:    
+
+Create a file `hashnet.txt` with the following text:    
+```
+:start    
+C:\Users\admin\Desktop\hashnet.exe server.tessie.club NAME_OF_YOUR_POOL    
+:: Wait 60 seconds before restarting.    
+TIMEOUT /T 60    
+GOTO:Start    
+```
+
+path can be specified in a different way, just point it to the place where you have your `hashnet.exe` file.    
+Rename file from `hashnet.txt` to `hashnet.bat`    
+Double-click on it to start.    
+If you want to run it on start-up then from Start menu open `Run` -> `shell:startup` and copy the hashnet.bat file to the prompted directory. 
