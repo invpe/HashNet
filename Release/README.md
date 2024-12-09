@@ -1,7 +1,8 @@
 # Hashnet 1.3
 
 Multiplatform release for W32, Linux, ESP32 - the iOS comes with an invite from the AppStore Test Flight.
-This release supports jobs with `DSHA256`, `SHA1` stay up to date with new ones coming.
+
+This release supports jobs with `DSHA256`, `SHA1`, `BLAKE3` stay up to date with new ones coming.
 
 Since this is in POC, It is recommended to run the binaries in the loop, in case the mining exits due to software issues, loop will restart it again.
 
