@@ -31,6 +31,12 @@ Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 You have to be invited to the TestFlight in order to join with your phone or tablet, let us know you are interested.
 
+## ASIC
+
+This version is **only** for SHA256 and works with USB ASIC Miners i.e Block Erupter.
+By default it opens a serial connection with `/dev/ttyUSB0` and squeezes Hash rate around 330MH/s.
+
+
 # 👷 Advanced
 
 ### Autorun hashnet's newest version with crontab (Linux, Raspberry)
@@ -92,7 +98,7 @@ then run: `chmod +x /root/hashnet/hashnet.bin`
 **Create an '.sh' file**: Create a new file in desired directory (in this case it will be /root/hashnet): `nano /root/hashnet/hashnet.sh` and add the following lines to it (modify the last parameter with your's pool name):
 
 #!/bin/bash     
-/root/hashnet/hashnet.bin server.tessie.club NAME_OF_YOUR_POOL;
+/root/hashnet/hashnet.bin hashnet.server.com NAME_OF_YOUR_POOL;
 
 **Save the file (Ctrl+O), exit the editor (Ctrl+X) and run the following command**:
 `chmod +x /root/hashnet/hashnet.sh`
@@ -134,7 +140,7 @@ Logs can be monitored via `journalctl -u hashnet.service -n 20` where after -n y
 Create a file `hashnet.txt` with the following text:    
 ```
 :start    
-C:\Users\admin\Desktop\hashnet.exe server.tessie.club NAME_OF_YOUR_POOL    
+C:\Users\admin\Desktop\hashnet.exe hashnet.server.com NAME_OF_YOUR_POOL    
 :: Wait 60 seconds before restarting.    
 TIMEOUT /T 60    
 GOTO:Start    
