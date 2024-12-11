@@ -10,17 +10,24 @@ Since this is in POC, It is recommended to run the binaries in the loop, in case
 
 ## Windows
 
+![image](https://github.com/user-attachments/assets/de001ec0-5173-43f4-b61e-855f7b2dcc41)
+
+
 Download the `hashnet.exe` file and run with `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
 
 Example: `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM MY_RIG1`
 
 ## Linux, Raspberry PI
 
+![image](https://github.com/user-attachments/assets/95d63df1-811c-436e-a757-a2b81d8f583d)
+
 Download the `hashnet.bin` file and run with `./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
 
 Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 ## ESP32
+
+![image](https://github.com/user-attachments/assets/b0bc1250-0e31-4ba3-a0dd-a879f37ad8f8)
 
 1. Download the `esp32merged.bin` file 
 2. Connect your ESP32 
@@ -29,9 +36,13 @@ Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 ## iOS - Iphones, IPADs
 
+![image](https://github.com/user-attachments/assets/cdc74d20-0d80-48db-9e94-87598923db37)
+
 You have to be invited to the TestFlight in order to join with your phone or tablet, let us know you are interested.
 
 ## ASIC
+
+![image](https://github.com/user-attachments/assets/ace6338b-44f8-46a3-8776-c2d545bfbbd6)
 
 This version is **only** for SHA256 and works with USB ASIC Miners i.e Block Erupter.
 By default it opens a serial connection with `/dev/ttyUSB0` and squeezes Hash rate around 330MH/s.
