@@ -9,15 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
     <style> 
-        .blinking {
-            animation: blinkingEffect 1.5s infinite;
-        }
-
-        @keyframes blinkingEffect {
-            0% { background-color: #fff7a8; } /* Light yellow */
-            50% { background-color: #ffeb3b; } /* Bright yellow */
-            100% { background-color: #fff7a8; }
-        }
         body {
             font-family: Arial, Helvetica, sans-serif;
             background-color: #ffffff;
@@ -46,12 +37,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-        .card-ready {
-            background-color: #e6ffe6 ; /* Light yellow */
-        }
-        .card-not-ready {
-            background-color: #ffe6e6; /* Light red */
-        }
         .card-header {
             padding: 15px 20px;
             background-color: #f0f0f0;
@@ -63,10 +48,6 @@
         .card-header h2 {
             font-size: 1.2em;
             margin: 0;
-        }
-        .card-header span {
-            font-size: 1.5em;
-            transition: transform 0.3s;
         }
         .card-content {
             padding: 20px;
@@ -91,7 +72,24 @@
         .refresh button:hover {
             background-color: #005bb5;
         }
-         .github-link {
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        table th, table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        table tbody tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .github-link {
             text-align: center;
             margin: 15px 0;
         }
@@ -119,30 +117,66 @@
         <!-- Mining Overview -->
         <div id="mining-section" class="section"></div>
 
+
         <!-- Chart Section -->
         <div id="chart-section" class="section">
-            <canvas id="historyChart" width="400" height="200"></canvas>
+            <canvas id="historyChart" width="400" height="300"></canvas>
         </div>
+
+        <div class="info-banner" style="background-color: #fff8d6; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f0e4b2;">
+            <p style="margin: 0; font-size: 1.1em; text-align: center;">
+                🎅 Ho-Ho-Ho! May the block rewards be ever in your favor! 🎄<BR>   
+            </p>
+        </div>
+
+        <div id="global-ranking-section" class="section"></div>
+
+        <!-- Nodes Details -->
+        
+
+        <div id="miners-chart-section" class="section">
+            <canvas id="minersChart" width="400" height="300"></canvas>
+        </div>
+        <div id="nodes-section" class="section"></div>
+
+        <div id="ranking-section" class="section"></div>
 
         <!-- Pool Details -->
         <div id="pools-section" class="section"></div>
 
-        <!-- Nodes Details -->
-        <div id="nodes-section" class="section"></div>
+
     </div>
     <div class="refresh">
         <button onclick="loadData()">Refresh Now</button>
     </div>
 
     <script>
-        const API_URL = './stats.json'; // JSON file path
+
+        const API_URL = './stats.json'; // JSON file path 
+        const COINGECKO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=helium-iot&vs_currencies=usd';
+
+        let iotToUsdRate = 0;
+
+        async function fetchIotToUsdRate() {
+            try {
+                const response = await fetch(COINGECKO_API);
+                const data = await response.json();
+                iotToUsdRate = data['helium-iot']['usd'];
+            } catch (error) {
+                console.error("Error fetching IOT to USD conversion rate:", error);
+            }
+        }
+
+
 
         async function loadData() {
             try {
+                await fetchIotToUsdRate(); // Fetch the conversion rate before loading data      
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 renderData(data);
                 if (data.History) renderChart(data.History);
+                if (data.Nodes)  renderMinersChart(data.Nodes);
             } catch (error) {
                 console.error("Error loading data:", error);
                 document.body.innerHTML += '<p style="color: red;">Failed to load data. Check console for details.</p>';
@@ -160,7 +194,9 @@
             const labels = history.map(entry =>
                 new Date(entry.Epoch * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             );
-            const cpsData = history.map(entry => entry.CPS);
+            const cpsData       = history.map(entry => entry.CPS);
+            const minersData     = history.map(entry => entry.Miners);
+            const validatedData     = history.map(entry => entry.Completed);
 
             const ctx = document.getElementById('historyChart').getContext('2d');
             new Chart(ctx, {
@@ -177,11 +213,19 @@
                         pointBackgroundColor: 'black',
                     },{
                         label: 'Miners',
-                        data: cpsData,
+                        data: minersData,
                         borderColor: 'black',
                         backgroundColor: 'transparent',
                         borderWidth: 1,
                         pointRadius: 2,
+                        pointBackgroundColor: 'black',
+                    },{
+                        label: 'Validated',
+                        data: validatedData,
+                        borderColor: 'black',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        pointRadius: 1,
                         pointBackgroundColor: 'black',
                     }
 
@@ -209,12 +253,85 @@
                 },
             });
         }
+        function renderMinersChart(nodes) {
+        // Aggregate data for each miner
+        const minerData = nodes.reduce((acc, node) => {
+            if (!acc[node.Ident]) {
+                acc[node.Ident] = {
+                    CPS: 0,
+                    Completed: 0,
+                };
+            }
+            acc[node.Ident].CPS += node.CPS;
+            acc[node.Ident].Completed += node.Completed;
+            return acc;
+        }, {});
+
+        // Convert aggregated data to arrays
+        const labels = Object.keys(minerData);
+        const hashRates = labels.map(label => minerData[label].CPS);
+        const completedJobs = labels.map(label => minerData[label].Completed);
+
+        // Create the bar chart
+        const ctx = document.getElementById('minersChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Hash Rate (CPS)',
+                        data: hashRates,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: 'Completed Jobs',
+                        data: completedJobs,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { color: 'black' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    },
+                    y: {
+                        ticks: { color: 'black' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: 'black' },
+                    },
+                },
+            },
+        });
+    }
+
         function renderData(data) {
             // Clear sections
             document.getElementById("mining-section").innerHTML = '';
             document.getElementById("pools-section").innerHTML = '';
             document.getElementById("nodes-section").innerHTML = '';
+            document.getElementById("ranking-section").innerHTML = '';
+            document.getElementById("global-ranking-section").innerHTML = '';
 
+            // Update the info banner based on the rewards pool
+            const infoBanner = document.querySelector('.info-banner p');
+            if (data.Mining[0].DCAP > 800) {
+                infoBanner.innerHTML = `🎅 Ho-Ho-Ho! May the block rewards be ever in your favor! 🎄<br>🎉 <strong>Rewards frenzy</strong>: Boosted rewards today!`;
+            }
+            
             // Mining Overview
             const mining = data.Mining[0];
             const poolCount = data.Pools.length;
@@ -227,50 +344,62 @@
                         <p><strong>Time:</strong> ${new Date(mining.Time * 1000).toLocaleString()}</p>
                         <p><strong>Version:</strong> ${mining.Version}</p>
                         <p><strong>Miners:</strong> ${mining.Miners}</p>
-                        <p><strong>Throttled:</strong> ${mining.Throttled}</p>
-                        <p><strong>Total CPS:</strong> ${mining.CPS.toLocaleString()}</p>
-                        <p><strong>Number of Pools:</strong> ${poolCount}</p>
+                        <p><strong>Valid:</strong> ${mining.Completed}</p>
+                        <p><strong>CPS:</strong> ${mining.CPS.toLocaleString()}</p> 
                     </div>
                 </div>`;
 
             // Pools Details
-            const poolsHTML = data.Pools.map(pool => {
-                const job = pool.Job[0];
-                const isReady = job.Ready === 1;
-                const hasHistory = pool.History.length > 0; // Check if history exists
-                const validCount = pool.History.filter(entry => entry.Valid === "Valid").length; // Count valid entries
-                const hasFound = job.Found > 0;
-                const cardClass = isReady ? 'card-ready' : 'card-not-ready';
-                const blinkingClass = ''; //hasHistory ? 'blinking' : ''; // Blink green if history exists
-                const emoticon = hasHistory ? '😋' : '😡'; // Show icon if history exists
+           const poolsHTML = data.Pools
+                .filter(pool => pool.Enabled === 1) // Only include enabled pools
+                .map(pool => {
+                    const job = pool.Job[0];
+                    const isReady = job.Ready === 1;
+                    const hasFound = job.Found > 0;
+                    const cardClass = isReady ? 'card-ready' : 'card-not-ready';
 
-                // Pool history with converted Epoch
-                const historyHTML = pool.History.slice(-10) // Take the last 10 entries
-                    .map(entry => {
-                        const dateTime = new Date(entry.Epoch * 1000).toLocaleString(); // Convert Unix timestamp
-                        return `<p><strong>Date:</strong> ${dateTime} | <strong>Ident:</strong> ${entry.Ident} | Valid: ${entry.Valid}</p>`;
-                    })
-                    .join('');
+                    // Check if we have valid data for BestScoreEver and TargetScore
+                    const bestScoreJob = parseFloat(job.BestScoreJob);
+                    const targetScore = parseFloat(job.TargetScore);
+                    const isProgressBarVisible = !isNaN(bestScoreJob) && !isNaN(targetScore) && targetScore > 0;
 
-                return `
-                    <div class="card ${cardClass} ${blinkingClass}">
-                        <div class="card-header" onclick="toggleContent(event)">
-                            <h2>${emoticon} ${pool.Name} - Found: ${validCount}</h2>
-                            <span>▶</span>
-                        </div>
-                        <div class="card-content">
-                            <p><strong>Reconnections:</strong> ${pool.Reconnections}</p>
-                            <p><strong>Last Connection:</strong> ${new Date(pool.LastConnection * 1000).toLocaleString()}</p>
-                            <p><strong>Job:</strong> ${job.Job} (ID: ${job.JobID})</p>
-                            <p><strong>Completed:</strong> ${job.Completed}</p>
-                            <p><strong>Best Score (Job):</strong> ${job.BestScoreJob}</p>
-                            <p><strong>Best Score (Ever):</strong> ${job.BestScoreEver}</p>
-                            <h3>History (Last 10 Mined Blocks):</h3>
-                            ${historyHTML || '<p>No history available.</p>'}
-                        </div>
-                    </div>`;
-            }).join('');
-            document.getElementById("pools-section").innerHTML = `<h2>Pools</h2>${poolsHTML}`;
+                    // Calculate progress percentage if data is valid
+                    const progressPercent = isProgressBarVisible
+                        ? Math.min((bestScoreJob / targetScore) * 100, 100)
+                        : 0;
+
+                    return `
+                        <div class="card ${cardClass}">
+                            <div class="card-header" onclick="toggleContent(event)">
+                                <h2>
+                                    ${pool.Name}
+                                    ${isProgressBarVisible ? `
+                                    <div style="flex-grow: 1; margin-left: 20px;">
+                                        <div style="background-color: #e0e0e0; border-radius: 5px; height: 10px; overflow: hidden;">
+                                            <div style="width: ${progressPercent}%; background-color: #4caf50; height: 100%;"></div>
+                                        </div>
+                                        <small style="display: block; text-align: right; font-size: 0.8em;">
+                                            ${progressPercent.toFixed(1)}% (${bestScoreJob.toFixed(2)} / ${job.BestScoreEver} / ${targetScore.toFixed(2)})
+                                        </small>
+                                    </div>
+                                    ` : ''}
+                                </h2>
+                                <span>▶</span>
+                            </div>
+                            <div class="card-content">
+                                <p><strong>Reconnections:</strong> ${pool.Reconnections}</p>
+                                <p><strong>Last Connection:</strong> ${new Date(pool.LastConnection * 1000).toLocaleString()}</p>
+                                <p><strong>Last Job:</strong> ${new Date(job.Epoch * 1000).toLocaleString()}</p>
+                                <p><strong>TotalJobs:</strong> ${pool.TotalJobs}</p>
+                                <p><strong>TotalValid:</strong> ${pool.TotalValid}</p>
+                                <p><strong>Best Score (Job):</strong> ${job.BestScoreJob}</p>
+                                <p><strong>Best Score (Ever):</strong> ${job.BestScoreEver}</p>
+                                <p><strong>Entropy:</strong> ${job.E2NonceSize}</p>
+                            </div>
+                        </div>`;
+                })
+                .join('');
+            document.getElementById("pools-section").innerHTML = `<h2>📡 Pools & status</h2>${poolsHTML}`;
 
             /// Nodes Details
             const medals = ['🥇', '🥈', '🥉']; // Gold, Silver, Bronze medals
@@ -310,8 +439,87 @@
                         </div>
                     </div>`;
             }).join('');
-            document.getElementById("nodes-section").innerHTML = `<h2>Nodes</h2>${nodesHTML}`;
+            document.getElementById("nodes-section").innerHTML = `<h2>💻 Nodes</h2>${nodesHTML}`;
 
+
+             // Ranking Section 
+            const rankingHTML = data.Ranking.map(poolRanking => 
+            {
+                const completedPerUser = Object.entries(poolRanking.CompletedPerUser)
+                    .sort((a, b) => b[1] - a[1]); // Sort by completed tasks in descending order
+
+                const userRankingHTML = completedPerUser.map(([user, tasks], index) => {
+                    const medal = medals[index] || '💪'; // Assign medals to the top 3 contributors
+                    return `<p>${medal} <strong>${user}:</strong> ${tasks} valid</p>`;
+                }).join('');
+
+                return `
+                    <div class="card">
+                        <div class="card-header" onclick="toggleContent(event)">
+                            <h2>${poolRanking.PoolName}</h2>
+                            <span>▶</span>
+                        </div>
+                        <div class="card-content">
+                            ${userRankingHTML || '<p>No contributions yet.</p>'}
+                        </div>
+                    </div>`;
+            }).join('');
+            document.getElementById("ranking-section").innerHTML = `<h2>🎏 Ranking per pool</h2>${rankingHTML}`;
+
+
+
+             // Global Ranking Section
+            const baseRewardsPool = data.Mining[0].DCAP; // capped daily budget in IOT
+            const totalValidBlocksToday = mining.Completed; // Total valid blocks for the day
+            let rewardPerBlock = baseRewardsPool / totalValidBlocksToday; // Fixed rate
+
+            // Check if total payout exceeds budget
+            const totalPayout = totalValidBlocksToday * rewardPerBlock;
+
+            if (totalPayout > baseRewardsPool) {
+                // Adjust reward per block if total payout exceeds budget
+                rewardPerBlock = baseRewardsPool / totalValidBlocksToday;
+            }
+
+         
+
+            // Calculate each miner's reward
+            const globalRanking = Object.entries(data.Ranking.reduce((acc, pool) => {
+                for (const [user, tasks] of Object.entries(pool.CompletedPerUser)) {
+                    if (user.trim()) acc[user] = (acc[user] || 0) + tasks; // Sum valid blocks per user
+                }
+                return acc;
+            }, {}))
+            .sort((a, b) => b[1] - a[1]) // Sort by valid blocks
+            .map(([user, tasks], index) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = medals[index] || '💪';
+                const reward = (tasks * rewardPerBlock).toFixed(2);
+                const rewardInUsd = (reward * iotToUsdRate).toFixed(2); // Convert to USD
+
+
+                return `
+                    <tr>
+                        <td>${medal}</td>
+                        <td>${user}</td>
+                        <td>🎁 ${tasks}</td>
+                        <td><b>${reward}</b> IOT (~<a href=https://www.coingecko.com/en/coins/helium-iot/usd>$${rewardInUsd} USD</a>)</td>
+                    </tr>`;
+            }).join('');
+
+            document.getElementById("global-ranking-section").innerHTML = `
+                <h2>💵 Today's Ranking & Rewards <a href=rewards.csv>📥</a></h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>👑 Rank</th>
+                            <th>👾 Rig</th>
+                            <th>✅ Valid</th>
+                            <th>📅 Today's rewards</th>
+                        </tr>
+                    </thead>
+                    <tbody>${globalRanking}</tbody>
+                </table>`;
 
         }
 
