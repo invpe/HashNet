@@ -1,5 +1,5 @@
 // HashNet ESP32 miner
-// https://github.com/invpe/HashNet/
+// https://github.com/invpe/HashNet/ 
 ///////////////////////////////////
 #include <random>
 #include <iostream>
@@ -13,8 +13,8 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <Preferences.h>
-
 #include <Adafruit_NeoPixel.h>
+
 #include "SPIFFS.h"
 #include "mbedtls/md.h"
 #include "mbedtls/sha256.h"
@@ -45,7 +45,7 @@ std::string nbits;
 std::string ntime;
 std::string extranonce1;
 
-const String strVersion = "1.2";
+const String strVersion = "1.3";
 
 String strWIFI_SSID = "";
 String strWIFI_Password = "";
@@ -68,6 +68,38 @@ int iLastZeroBitsDistance = 0;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, 27, NEO_GRB + NEO_KHZ800);
 
+String sha1HW(unsigned char *payload, int len) {
+  //
+  int size = 20;
+  byte shaResult[size];
+
+  mbedtls_md_context_t ctx;
+  mbedtls_md_type_t md_type = MBEDTLS_MD_SHA1;
+
+  const size_t payloadLength = len;
+
+  mbedtls_md_init(&ctx);
+  mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+  mbedtls_md_starts(&ctx);
+  mbedtls_md_update(&ctx, (const unsigned char *)payload, payloadLength);
+  mbedtls_md_finish(&ctx, shaResult);
+  mbedtls_md_free(&ctx);
+
+  String hashStr = "";
+
+  for (uint16_t i = 0; i < size; i++) {
+    String hex = String(shaResult[i], HEX);
+    if (hex.length() < 2) {
+      hex = "0" + hex;
+    }
+    hashStr += hex;
+  }
+
+  return hashStr;
+}
+String sha1HW(String payload) {
+  return sha1HW((unsigned char *)payload.c_str(), payload.length());
+}
 void sha256_init_with_intermediate_state(const uint8_t *bytearray_blockheader, size_t header_size_without_nonce, mbedtls_sha256_context *ctx) {
   mbedtls_sha256_init(ctx);
   mbedtls_sha256_starts_ret(ctx, 0);  // 0 means SHA-256 (as opposed to SHA-224)
@@ -95,12 +127,6 @@ inline void sha256_double_with_intermediate_state(mbedtls_sha256_context *ctx, u
   // Clean up
   mbedtls_sha256_free(&temp_ctx);
 }
-std::string hexStringFromUInt32(uint32_t value) {
-    char buffer[9];  // 8 characters + null terminator
-    snprintf(buffer, sizeof(buffer), "%08x", value);  // Convert to zero-padded hex
-    return std::string(buffer);
-}
-
 bool StreamFile(const String &rstrURL, const String &rstrPath) {
   HTTPClient WebClient;
   WebClient.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
@@ -260,12 +286,7 @@ uint8_t hex(char ch) {
   uint8_t r = (ch > 57) ? (ch - 55) : (ch - 48);
   return r & 0x0F;
 }
-int to_byte_array(const char *in, size_t in_size, uint8_t *out) {std::string hexStringFromUInt32(uint32_t value) {
-    char buffer[9];  // 8 characters + null terminator
-    snprintf(buffer, sizeof(buffer), "%08x", value);  // Convert to zero-padded hex
-    return std::string(buffer);
-}
-
+int to_byte_array(const char *in, size_t in_size, uint8_t *out) {
   int count = 0;
   if (in_size % 2) {
     while (*in && out) {
@@ -315,7 +336,12 @@ void sha256_double(const void *data, size_t len, uint8_t output[32]) {
   // Second SHA-256 hash
   mbedtls_sha256(intermediate_hash, sizeof(intermediate_hash), output, 0);  // 0 means SHA-256 (as opposed to SHA-224)
 }
- 
+std::string hexStringFromUInt32(uint32_t value) {
+  char buffer[9];                                   // 8 characters + null terminator
+  snprintf(buffer, sizeof(buffer), "%08x", value);  // Convert to zero-padded hex
+  return std::string(buffer);
+}
+
 void setup() {
 
   pixels.begin();
@@ -400,7 +426,7 @@ void setup() {
 
   //
   WiFi.setHostname("HASHNET_NODE");
-  
+
   // Wifi up
   WiFi.begin(strWIFI_SSID, strWIFI_Password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -420,6 +446,72 @@ void setup() {
   }
 
 
+  /*
+
+  // Check if all return the same double hash
+
+  // Block header in LE with 00000000 nonce
+  std::string blockheader = "20000000dec6d0b18efc502ceb1c4df64793bbbcb291a6450002ac290000000000000000fbc46586cc5fc60ed3a55b2572abb4c4096f79b76878cc7c59f6d5ebb0d4e228671aa7731702f12800000000";
+  to_byte_array(blockheader.c_str(), 80 * 2, u8BlockHeaderBytes);
+
+
+  //
+  Serial.printf("BLOCKHEADER: ");
+  for (size_t x = 0; x < sizeof(u8BlockHeaderBytes); x++) {
+    Serial.printf("%02x", u8BlockHeaderBytes[x]);
+  }
+  Serial.println("");
+
+  uint8_t block_hash0[32];
+ 
+
+
+  // SHA NERD PLUS - messy
+  nerdSHA256_context midstate0;
+  nerd_mids(&midstate0, block_hash0);
+  unsigned char *pHeader64 = block_hash0 + 64;
+
+  nerd_sha256d(&midstate0, pHeader64, block_hash0);
+  Serial.printf("NERDPLUS: ");
+  for (size_t x = 0; x < sizeof(block_hash0); x++) {
+    Serial.printf("%02x", block_hash0[x]);
+  }
+  Serial.println("");
+  memset(block_hash0, 0x00, sizeof(block_hash0));
+
+  // SHA NERD
+  nerd_sha256 _ctx;
+  nerd_midstate(&_ctx, u8BlockHeaderBytes, 80);
+  unsigned char *pAHeader64 = u8BlockHeaderBytes + 64;
+  nerd_double_sha2(&_ctx, pAHeader64, block_hash0);
+  Serial.printf("NERD: ");
+  for (size_t x = 0; x < sizeof(block_hash0); x++) {
+    Serial.printf("%02x", block_hash0[x]);
+  }
+  Serial.println("");
+  memset(block_hash0, 0x00, sizeof(block_hash0));
+
+  // SHA NORMAL
+  sha256_double(u8BlockHeaderBytes, sizeof(u8BlockHeaderBytes), block_hash0);
+  Serial.printf("SHA256D: ");
+  for (size_t x = 0; x < sizeof(block_hash0); x++) {
+    Serial.printf("%02x", block_hash0[x]);
+  }
+  Serial.println("");
+  memset(block_hash0, 0x00, sizeof(block_hash0));
+
+  // SHA MIDSTATE
+  mbedtls_sha256_context sha256_state0;
+  sha256_init_with_intermediate_state(u8BlockHeaderBytes, 76, &sha256_state0);
+  sha256_double_with_intermediate_state(&sha256_state0, 0x00, block_hash0);
+  Serial.printf("SHA256MID: ");
+  for (size_t x = 0; x < sizeof(block_hash0); x++) {
+    Serial.printf("%02x", block_hash0[x]);
+  }
+  Serial.println("");
+  memset(block_hash0, 0x00, sizeof(block_hash0));
+
+*/
   pixels.setPixelColor(0, 0, 0, 0);
   pixels.show();
 }
@@ -460,6 +552,7 @@ void MiningTask(void *pParam) {
       strBestDistanceBlockHash = String(byteArrayToHexString(taskBlockHash, 32).c_str());
 
       if (checkValid(taskBlockHash, target)) {
+
         std::string strTemp = std::string("{\"method\": \"found\", \"job_id\": \"") + job_id
                               + std::string("\", \"extranonce1\": \"") + extranonce1
                               + std::string("\", \"extranonce2\": \"") + extranonce2
@@ -483,7 +576,7 @@ void MiningTask(void *pParam) {
 }
 
 void loop() {
-  
+
   // As simple as it gets
   if (WiFi.isConnected() == false) {
     Serial.println("WIFI");
@@ -497,7 +590,8 @@ void loop() {
 
   if (client.available()) {
 
-   
+    //String line = R"({"job_id": "648516380014efa9", "prevhash": "811c393cdc2edc26535b6cdfa4192548a4c00f580002a29c0000000000000000", "coinb1": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff3503d51f0d000487cada660420349a0d0c", "coinb2": "0a636b706f6f6c112f736f6c6f2e636b706f6f6c2e6f72672fffffffff03f6d2cc1200000000160014cbcfd21833582f2781f78464797ca26a9026bd5a8c3862000000000016001451ed61d2f6aa260cc72cdf743e4e436a82c010270000000000000000266a24aa21a9ed6521046c65…19b9eee0e5540689f62d40a5ead1d7185d04f6516651066f1", "de900b17a6712c740d138191506f2107ca1f6e51cceba72284a310dca34b438d", "8255f9a5496fdc73ae118134ce1349f86a72f6a60f40c0c931c3d5d64a1bb700"], "version": "20000000", "nbits": "1703255b", "ntime": "66daca87", "extranonce1": "61e36875", "extranonce2_size": 8, "clean_jobs": false, "method": "work", "nonce_start": 000000000, "nonce_end": 458000000, "extranonce2": "9ff3fad690bad6f1", "sversion": "1.2"})";
+
     String line = client.readStringUntil('\n');
 
     // Parse the received JSON
@@ -505,12 +599,15 @@ void loop() {
     deserializeJson(doc, line);
 
     std::string method = doc["method"].as<std::string>();
+
+
     if (method == "work") {
       Serial.println(line);
       std::vector<uint8_t> vHeader;
 
       // Check if versions match
       String strServerVersion = doc["sversion"].as<String>();
+
       if (strServerVersion != strVersion) {
         Serial.println("Version mismatch " + strServerVersion + " " + strVersion);
 
@@ -525,104 +622,168 @@ void loop() {
         ESP.restart();
       }
 
-      // Extract the work details
-      job_id = doc["job_id"].as<std::string>();
-      prevhash = doc["prevhash"].as<std::string>();
-      coinb1 = doc["coinb1"].as<std::string>();
-      coinb2 = doc["coinb2"].as<std::string>();
-      version = doc["version"].as<std::string>();
-      nbits = doc["nbits"].as<std::string>();
-      ntime = doc["ntime"].as<std::string>();
-      extranonce1 = doc["extranonce1"].as<std::string>();
-      extranonce2_size = doc["extranonce2_size"];
-      nonce_start = doc["nonce_start"];
-      nonce_end = doc["nonce_end"];
-      extranonce2 = doc["extranonce2"].as<std::string>();
+      // Todo: Should be a class per job type
+      std::string strJobName = doc["name"].as<std::string>();
 
-      // Extract the merkle_branch
-      std::vector<std::string> merkle_branch;
-      for (size_t i = 0; i < doc["merkle_branch"].size(); i++) {
-        merkle_branch.push_back(doc["merkle_branch"][i].as<std::string>());
-      }
+      if (strJobName == "DUCOSHA1") 
+      {
+        uint32_t uiHashesPerSec = 0;
+        job_id = doc["job_id"].as<std::string>();
+        nonce_start = std::stoull(doc["nonce_start"].as<std::string>());
+        nonce_end = std::stoull(doc["nonce_end"].as<std::string>());
+        String prevhash = doc["prevhash"].as<String>();
+        String expectedhash = doc["expectedhash"].as<String>();
 
-      // Calculate target this never changes
-      nbitsToBETarget(nbits, target);
 
-      // Generate coinbase and calculate its hash - Big Endian
-      std::string coinbase = coinb1 + extranonce1 + extranonce2 + coinb2;
-      size_t str_len = coinbase.length() / 2;
-      uint8_t coinbase_bytes[str_len];
-      to_byte_array(coinbase.c_str(), str_len * 2, coinbase_bytes);
-      uint8_t final_hash[32];
-      sha256_double(coinbase_bytes, str_len, final_hash);
-      std::string coinbase_hash_hex = bin_to_hex(final_hash, sizeof(final_hash));
-      std::string merkle_root = calculate_merkle_root_to_hex_BE(final_hash, 32, merkle_branch);
+        Serial.printf("[MINER] %i to %i for %s\n", nonce_start, nonce_end, expectedhash.c_str());
 
-      // BLOCK CONSTRUCTION (dummy nonce 000000 at the end)
-      std::string blockheader = version + prevhash + merkle_root + ntime + nbits + "00000000";
-      to_byte_array(blockheader.c_str(), 160, u8BlockHeaderBytes);
+        for (uint32_t uiNonce = nonce_start; uiNonce < nonce_end; uiNonce++) 
+        {
+          String strTemp = prevhash + String(uiNonce);
+          String strOutput = sha1HW(strTemp);
+          uiHashesPerSec++;
 
-      // Reverse specific sections of the block header
-      reverse_bytes(u8BlockHeaderBytes, 36, 32);  // Reverse merkle root (32 bytes) after sha256
 
-      // Clear out the work
-      bTask0Completed = false;
-      bTask1Completed = false;
-      iLastZeroBitsDistance = 0;
-      uiTotalNonce = 0;
-      strBestDistanceBlockHash.clear();
+          // Found
+          if (strOutput == expectedhash) {
+            std::string strTemp = std::string("{\"method\": \"found\", \"job_id\": \"") + job_id
+                                  + std::string("\", \"nonce\": \"") + std::to_string(uiNonce) + "\"}";
+            client.println(strTemp.c_str());
+            Serial.printf("[MINER] Found %i  %s=%s\n", uiNonce, strOutput.c_str(), expectedhash.c_str());
+            return;
+          }
 
-      // Dump work material
-      Serial.println("Start: " + String(nonce_start) + " End " + String(nonce_end) + " EN2 " + String(extranonce2.c_str()));
 
-      //
-      Serial.printf("BLOCKHEADER: ");
-      for (size_t x = 0; x < sizeof(u8BlockHeaderBytes); x++) {
-        Serial.printf("%02x", u8BlockHeaderBytes[x]);
-      }
-      Serial.println("");
+          // Stats
+          if (millis() - uiTick >= CHECK_INTERVAL) {
 
-      // Create two tasks, one for each core
-      xTaskCreatePinnedToCore(
-        MiningTask,  // Task function for core 0
-        "T0",        // Name of the task
-        5000,        // Stack size
-        (void *)0,   // Parameter
-        1,           // Priority
-        NULL,        // Task handle
-        0            // Core ID (core 0)
-      );
+            pixels.setPixelColor(0, 0, 255, 0);
+            pixels.show();
 
-      xTaskCreatePinnedToCore(
-        MiningTask,  // Task function for core 1
-        "T1",        // Name of the task
-        5000,        // Stack size
-        (void *)1,   // Parameter
-        1,           // Priority
-        NULL,        // Task handle
-        1            // Core ID (core 1)
-      );
-
-      while (!bTask0Completed || !bTask1Completed) {
-        yield();
-        // Stats
-        if (millis() - uiTick >= CHECK_INTERVAL) {
-
-          pixels.setPixelColor(0, 0, 255, 0);
-          pixels.show();
-
-          uint32_t uiTotalCS = (uiTask0CS + uiTask1CS) / (CHECK_INTERVAL / 1000);
-          String strPayload = String("{\"method\": \"stats\", \"combinations_per_sec\": ") + uiTotalCS + ", \"distance\": " + String(iLastZeroBitsDistance) + ", \"ident\":\"" + strMINER_IDENT + "\",\"version\":\"" + strVersion + "\",\"besthash\":\"" + strBestDistanceBlockHash + "\", \"current_nonce\": " + String(uiTotalNonce) + "}";
-          client.println(strPayload);
-          Serial.println(strPayload);
-
-          pixels.setPixelColor(0, 0, 0, 0);
-          pixels.show();
-
-          uiTask0CS = 0;
-          uiTask1CS = 0;
-          uiTick = millis();
+            String strPayload = String("{\"method\": \"stats\", \"combinations_per_sec\": ") + String(uiHashesPerSec / CHECK_INTERVAL) + ", \"distance\": 0, \"ident\":\"" + strMINER_IDENT + "\",\"version\":\"" + strVersion + "\",\"current_nonce\": " + String(uiNonce) + "}\r\n";
+            client.println(strPayload);
+            Serial.println(strPayload);
+            
+            pixels.setPixelColor(0, 0, 0, 0);
+            pixels.show();
+            uiTick = millis();
+            uiHashesPerSec = 0;
+          }
         }
+
+      } 
+      else if(strJobName == "DSHA256") 
+      {
+
+
+        // Extract the work details
+        job_id = doc["job_id"].as<std::string>();
+        prevhash = doc["prevhash"].as<std::string>();
+        coinb1 = doc["coinb1"].as<std::string>();
+        coinb2 = doc["coinb2"].as<std::string>();
+        version = doc["version"].as<std::string>();
+        nbits = doc["nbits"].as<std::string>();
+        ntime = doc["ntime"].as<std::string>();
+        extranonce1 = doc["extranonce1"].as<std::string>();
+        extranonce2_size = doc["extranonce2_size"];
+        nonce_start = doc["nonce_start"];
+        nonce_end = doc["nonce_end"];
+        extranonce2 = doc["extranonce2"].as<std::string>();
+
+        // Extract the merkle_branch
+        std::vector<std::string> merkle_branch;
+        for (size_t i = 0; i < doc["merkle_branch"].size(); i++) {
+          merkle_branch.push_back(doc["merkle_branch"][i].as<std::string>());
+        }
+
+        // Calculate target this never changes
+        nbitsToBETarget(nbits, target);
+
+        // Generate coinbase and calculate its hash - Big Endian
+        std::string coinbase = coinb1 + extranonce1 + extranonce2 + coinb2;
+        size_t str_len = coinbase.length() / 2;
+        uint8_t coinbase_bytes[str_len];
+        to_byte_array(coinbase.c_str(), str_len * 2, coinbase_bytes);
+        uint8_t final_hash[32];
+        sha256_double(coinbase_bytes, str_len, final_hash);
+        std::string coinbase_hash_hex = bin_to_hex(final_hash, sizeof(final_hash));
+        std::string merkle_root = calculate_merkle_root_to_hex_BE(final_hash, 32, merkle_branch);
+
+        // BLOCK CONSTRUCTION (dummy nonce 000000 at the end)
+        std::string blockheader = version + prevhash + merkle_root + ntime + nbits + "00000000";
+        to_byte_array(blockheader.c_str(), 160, u8BlockHeaderBytes);
+
+        // Reverse specific sections of the block header
+        reverse_bytes(u8BlockHeaderBytes, 36, 32);  // Reverse merkle root (32 bytes) after sha256
+
+        // Clear out the work
+        bTask0Completed = false;
+        bTask1Completed = false;
+        iLastZeroBitsDistance = 0;
+        uiTotalNonce = 0;
+        strBestDistanceBlockHash.clear();
+
+        // Dump work material
+        Serial.println("Start: " + String(nonce_start) + " End " + String(nonce_end) + " EN2 " + String(extranonce2.c_str()));
+
+        //
+        Serial.printf("BLOCKHEADER: ");
+        for (size_t x = 0; x < sizeof(u8BlockHeaderBytes); x++) {
+          Serial.printf("%02x", u8BlockHeaderBytes[x]);
+        }
+        Serial.println("");
+
+        // Create two tasks, one for each core
+        xTaskCreatePinnedToCore(
+          MiningTask,  // Task function for core 0
+          "T0",        // Name of the task
+          5000,        // Stack size
+          (void *)0,   // Parameter
+          1,           // Priority
+          NULL,        // Task handle
+          0            // Core ID (core 0)
+        );
+
+        xTaskCreatePinnedToCore(
+          MiningTask,  // Task function for core 1
+          "T1",        // Name of the task
+          5000,        // Stack size
+          (void *)1,   // Parameter
+          1,           // Priority
+          NULL,        // Task handle
+          1            // Core ID (core 1)
+        );
+
+        while (!bTask0Completed || !bTask1Completed) {
+          yield();
+          // Stats
+          if (millis() - uiTick >= CHECK_INTERVAL) {
+
+            pixels.setPixelColor(0, 0, 255, 0);
+            pixels.show();
+
+            uint32_t uiTotalCS = (uiTask0CS + uiTask1CS) / (CHECK_INTERVAL / 1000);
+            String strPayload = String("{\"method\": \"stats\", \"combinations_per_sec\": ") + String(uiTotalCS) + ", \"distance\": " + String(iLastZeroBitsDistance) + ", \"ident\":\"" + strMINER_IDENT + "\",\"version\":\"" + strVersion + "\",\"besthash\":\"" + strBestDistanceBlockHash + "\", \"current_nonce\": " + String(uiTotalNonce) + "}";
+            client.println(strPayload);
+            Serial.println(strPayload);
+
+            pixels.setPixelColor(0, 0, 0, 0);
+            pixels.show();
+
+            uiTask0CS = 0;
+            uiTask1CS = 0;
+            uiTick = millis();
+          }
+        }
+      }
+      else if(strJobName == "BLAKE3")
+      {
+          // Todo
+          Serial.println("Not my job");
+      }
+      else
+      {
+        Serial.println("Unknown job type");
       }
 
       // Nonces check completed
