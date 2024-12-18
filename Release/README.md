@@ -4,9 +4,9 @@ Multiplatform release for W32, Linux, ESP32 - the iOS comes with an invite from 
 
 This release supports jobs with `DSHA256`, `SHA1`, `BLAKE3` stay up to date with new ones coming.
 
-Since this is in POC, It is recommended to run the binaries in the loop, in case the mining exits due to software issues, loop will restart it again.
 
-✋ It is convenient to use [Startup Scripts](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts) when running binaries, they ensure miners run in the loop so there's no hussle to restart anything.
+
+✋ It is convenient to use [Startup Scripts](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts) when running binaries, they ensure miners run in the loop so there's no hussle to restart anything. Since this is in POC, apps are programmed to quit on issues. To keep them alive, use either a script or a simple `while` loop.
 
 
 # Instructions
