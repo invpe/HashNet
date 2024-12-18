@@ -47,5 +47,8 @@ chmod +x "$USER_HOME/$BINARY_NAME"
 
 # Start one instance per core in separate screen sessions
 for ((i=0; i<CORES; i++)); do
+    echo "Starting instance $i"
     screen -dmS hashnet_runner_$i bash -c "cd $USER_HOME; while true; do ./$BINARY_NAME $SERVER $NODE_ID; done"
+    screen -ls
+    sleep 1
 done
