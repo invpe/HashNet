@@ -6,12 +6,14 @@ This release supports jobs with `DSHA256`, `SHA1`, `BLAKE3` stay up to date with
 
 Since this is in POC, It is recommended to run the binaries in the loop, in case the mining exits due to software issues, loop will restart it again.
 
+✋ It is convenient to use [Startup Scripts](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts) when running binaries, they ensure miners run in the loop so there's no hussle to restart anything.
+
+
 # Instructions
 
 ## Windows
 
 ![image](https://github.com/user-attachments/assets/de001ec0-5173-43f4-b61e-855f7b2dcc41)
-
 
 Download the `hashnet.exe` file and run with `hashnet.exe YOUR_HASHNET_SERVER_DOT_COM your_miner_id`.
 
@@ -29,7 +31,7 @@ Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 Grab the `hashnet_arm64.bin` and use the [startup script](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts).
 
-Or you can manually run instances as with the linux above.
+Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
 ## Android phones
 
