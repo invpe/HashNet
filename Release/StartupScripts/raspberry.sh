@@ -13,7 +13,13 @@ fi
 SERVER="$1"
 NODE_ID="$2"
 
+# Get the number of CPU cores
+CORES=$(nproc)
+
 # Wait for the network to be up
+echo "Waiting for the network to come up"
+echo "You have $CORES cores"
+
 sleep 60
 
 # Detect architecture
@@ -37,9 +43,7 @@ wget "$BINARY_URL" -O "$USER_HOME/$BINARY_NAME"
 
 # Make the binary executable
 chmod +x "$USER_HOME/$BINARY_NAME"
-
-# Get the number of CPU cores
-CORES=$(nproc)
+ 
 
 # Start one instance per core in separate screen sessions
 for ((i=0; i<CORES; i++)); do
