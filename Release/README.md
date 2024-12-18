@@ -72,40 +72,15 @@ This example is based on raspberry pi, but you can update to any linux debian li
 
 1. Execute `crontab -e`
 
-2. Add `@reboot /home/pi/start.sh` at the end.
+2. Add `@reboot /home/pi/raspberry.sh` at the end.
 
 3. Exit crontab editing
 
 4. Execute `cd /home/pi`
 
-5. Create a startup script: `nano start.sh`, and copy the below - dont forget to update `HASHNET_SERVER`, `YOURNODEID`.
-
-```
-#!/bin/bash
-
-# Wait for the network to be up
-sleep 60
-
-# Remove the old binary
-rm -f /home/pi/hashnet_arm64.bin
-
-# Download the latest binary
-wget https://github.com/invpe/HashNet/releases/latest/download/hashnet_arm64.bin -O /home/pi/hashnet_arm64.bin
-
-# Make the binary executable
-chmod +x /home/pi/hashnet_arm64.bin
-
-# Get the number of CPU cores
-CORES=$(nproc)
-
-# Start one instance per core in separate screen sessions
-for ((i=0; i<CORES; i++)); do
-    screen -dmS hashnet_runner_$i bash -c "while true; do ./hashnet_arm64.bin HASHNET_SERVER YOURNODEID; done"
-done
-
-```
-
-6. Make the script executable with `chmod +x ./start.sh`
+5. Download [startup script](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts)
+ 
+6. Make the script executable with `chmod +x ./raspberry.sh`
 
 7. Simply `reboot` to test.
 
