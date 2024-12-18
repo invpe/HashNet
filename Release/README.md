@@ -25,6 +25,19 @@ Download the `hashnet.bin` file and run with `./hashnet.bin YOUR_HASHNET_SERVER_
 
 Example: `while true; do ./hashnet.bin YOUR_HASHNET_SERVER_DOT_COM MY_RIG1;done`
 
+## Raspberry PI
+
+Grab the `hashnet_arm64.bin` and use the [startup script](https://github.com/invpe/HashNet/tree/main/Release/StartupScripts).
+
+Or you can manually run instances as with the linux above.
+
+## Android phones
+
+![image](https://github.com/user-attachments/assets/da1fdc35-c3cf-4350-8134-5894b56731c9)
+
+If you have some old Android phones with arm64, use `UserLAND` and follow the raspberry instructions.
+
+
 ## ESP32
 
 ![image](https://github.com/user-attachments/assets/b0bc1250-0e31-4ba3-a0dd-a879f37ad8f8)
